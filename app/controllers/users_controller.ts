@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
-import hash from '@adonisjs/core/services/hash'
 
 export default class UsersController {
   // GET /users
@@ -9,7 +8,7 @@ export default class UsersController {
     return response.ok(users)
   }
 
-  // POST /users
+  // POST /users → para administrador
   async store({ request, response }: HttpContext) {
     const data = request.only([
       'fullName',
@@ -21,13 +20,41 @@ export default class UsersController {
       'mustChangePassword',
     ])
 
-    // Hashear la contraseña antes de guardar
-    if (data.password) {
-      data.password = await hash.make(data.password)
-    }
-
     const user = await User.create(data)
     return response.created(user)
+  }
+
+  // POST /register → para usuarios normales
+  async register({ request, response }: HttpContext) {
+    const data = request.only(['fullName', 'email', 'password'])
+
+    // Puedes forzar valores por defecto si no quieres recibirlos desde el frontend
+    const user = await User.create({
+      ...data,
+      isAdmin: false,
+      isActive: true,
+    })
+
+    return response.created({
+      message: 'Registro exitoso',
+      user,
+    })
+  }
+
+  // POST /login
+  async login({ request, response }: HttpContext) {
+    const { email, password } = request.only(['email', 'password'])
+
+    const user = await User.findBy('email', email)
+
+    if (!user || user.password !== password) {
+      return response.unauthorized({ message: 'Correo o contraseña inválidos' })
+    }
+
+    return response.ok({
+      message: 'Inicio de sesión exitoso',
+      user,
+    })
   }
 
   // GET /users/:id
@@ -70,7 +97,7 @@ export default class UsersController {
     const user = await User.find(params.id)
 
     if (!user) {
-      return response.notFound({ message: 'Usuario no encontrado' })
+      return response.notFound({ message: 'Usuario eliminado correctamente' })
     }
 
     await user.delete()

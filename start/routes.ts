@@ -8,11 +8,16 @@ router.get('/users/:id', [UsersController, 'show'])
 router.put('/users/:id', [UsersController, 'update'])
 router.delete('/users/:id', [UsersController, 'destroy'])
 
-// AuthController
-const AuthController = () => import('#controllers/auth_controller')
-router.post('/login', [AuthController, 'login'])
-router.post('/register', [AuthController, 'register'])
-router.get('/me', [AuthController, 'me'])
+// UsersController
+
+// Login con contraseña en texto plano
+router.post('/login', [UsersController, 'login'])
+
+// Crear usuario (registro)
+router.post('/register', [UsersController, 'store'])
+
+// Obtener el usuario actual (opcional, puedes eliminarlo si no se usa)
+router.get('/me', [UsersController, 'index']) // O reemplazar por show si tienes auth más adelante
 
 // TablasController
 const TablasController = () => import('#controllers/tablas_controller')
